@@ -1,8 +1,10 @@
 package org.maven.app.mockito.ejemplo.services;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.maven.app.mockito.ejemplo.dao.ExamenRepositorioOtro;
 import org.maven.app.mockito.ejemplo.dao.ExamenRespository;
+import org.maven.app.mockito.ejemplo.dao.PreguntaRepository;
 import org.maven.app.mockito.ejemplo.models.Examen;
 
 import java.util.Arrays;
@@ -11,36 +13,26 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 class ExamenServiceImplTest {
 
+    ExamenRespository respository;
+    ExamenService service;
+    PreguntaRepository preguntaRepository;
+
+    @BeforeEach
+    void setUp() {
+        respository = mock(ExamenRepositorioOtro.class);
+        preguntaRepository = mock(PreguntaRepository.class);
+        service = new ExamenServiceImpl(respository, preguntaRepository);
+    }
+
     @Test
     void findExamenPorNombre() {
-        ExamenRespository respository = mock(ExamenRepositorioOtro.class);
-        ExamenService service = new ExamenServiceImpl(respository);
-
-        List<Examen> datos = Arrays.asList(new Examen(5L, "Matematicas"),
-                new Examen(6L, "Lenguaje"),
-                new Examen(7L, "Historia"));
-
-        try {
-            when(respository.findAll()).thenReturn(datos);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-
+        when(respository.findAll()).thenReturn(Datos.EXAMENES);
         Optional<Examen> examen = null;
-
-        try {
-            examen = service.findExamenPorNombre("Matematicas");
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-
+        examen = service.findExamenPorNombre("Matematicas");
         assertTrue(examen.isPresent());
         assertEquals(5L,
                 examen.orElseThrow(null).getId());
@@ -50,32 +42,46 @@ class ExamenServiceImplTest {
 
     @Test
     void findExamenPorNombreListaVacia() {
-        ExamenRespository respository = mock(ExamenRepositorioOtro.class);
-        ExamenService service = new ExamenServiceImpl(respository);
 
         List<Examen> datos = Collections.emptyList();
 
-        try {
-            when(respository.findAll()).thenReturn(datos);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
+        when(respository.findAll()).thenReturn(datos);
 
         Optional<Examen> examen = null;
+        examen = service.findExamenPorNombre("Matematicas");
 
-        try {
-            examen = service.findExamenPorNombre("Matematicas");
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-
-        assertTrue(examen.isPresent());
-        assertEquals(5L,
-                examen.orElseThrow(null).getId());
-        assertEquals("Matematicas", examen.orElseThrow(null).getNombre());
+        assertFalse(examen.isPresent());
 
     }
 
+    @Test
+    void testPreguntasExamen() {
+        when(respository.findAll()).thenReturn(Datos.EXAMENES);
+        when(preguntaRepository.findPreguntasPorExamenId(5L)).thenReturn(Datos.PREGUNTAS);
+        Examen examen = service.findExamenPorNombreConPreguntas("Matematicas");
+        assertEquals(5L, examen.getPreguntas().size());
+
+    }
+
+    @Test
+    void testPreguntasExamenVerify() {
+        when(respository.findAll()).thenReturn(Datos.EXAMENES);
+        when(preguntaRepository.findPreguntasPorExamenId(5L)).thenReturn(Datos.PREGUNTAS);
+        Examen examen = service.findExamenPorNombreConPreguntas("Matematicas");
+        assertEquals(5L, examen.getPreguntas().size());
+        verify(respository).findAll();
+        verify(preguntaRepository).findPreguntasPorExamenId(anyLong());
+
+    }
+
+    @Test
+    void testNoExisteExamenVerify() {
+        when(respository.findAll()).thenReturn(Datos.EXAMENES);
+        when(preguntaRepository.findPreguntasPorExamenId(anyLong())).thenReturn(Datos.PREGUNTAS);
+        Examen examen = service.findExamenPorNombreConPreguntas("Matematicas2");
+        assertNull(examen);
+        verify(respository).findAll();
+        verify(preguntaRepository).findPreguntasPorExamenId(5L);
+
+    }
 }
