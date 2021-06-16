@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 
 import java.math.BigDecimal;
+import java.util.List;
 
 
 @Service
@@ -25,8 +26,20 @@ public class CuentaServiceImpl implements CuentaService{
 
     @Override
     @Transactional(readOnly = true)
+    public List<Cuenta> findAll() {
+        return cuentaRepository.findAll();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Cuenta findById(Long id) {
         return cuentaRepository.findById(id).orElse(null);
+    }
+
+    @Override
+    @Transactional
+    public Cuenta save(Cuenta cuenta) {
+        return cuentaRepository.save(cuenta);
     }
 
     @Override

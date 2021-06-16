@@ -11,7 +11,11 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+
+import static org.springframework.http.HttpStatus.CREATED;
+import static org.springframework.http.HttpStatus.OK;
 
 @RestController
 @RequestMapping("/api/cuentas")
@@ -20,8 +24,20 @@ public class CuentaController {
     @Autowired
     private CuentaService cuentaService;
 
+    @GetMapping
+    @ResponseStatus(OK)
+    public List<Cuenta> listarCuentas(){
+        return cuentaService.findAll();
+    }
+
+    @PostMapping
+    @ResponseStatus(CREATED)
+    public Cuenta guardar(@RequestBody Cuenta cuenta) {
+        return cuentaService.save(cuenta);
+    }
+
     @GetMapping("/{id}")
-    @ResponseStatus(HttpStatus.OK)
+    @ResponseStatus(OK)
     public Cuenta detalle(@PathVariable(name="id") Long id){
         return cuentaService.findById(id);
     }
@@ -34,7 +50,7 @@ public class CuentaController {
                 transaccionDTO.getBancoId());
         Map<String, Object> response = new HashMap<>();
         response.put("date", LocalDate.now().toString());
-        response.put("message", "Transferencia realizada con éxito.");
+        response.put("message", "Transferencia realizada con exito!");
         response.put("transaccion", transaccionDTO);
         return ResponseEntity.ok(response);
     }
